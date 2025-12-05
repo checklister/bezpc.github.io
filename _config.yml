@@ -1,3 +1,5 @@
 title: bezpc.github.io
 author: bezpc
 theme: minima
+sass:
+  sass_dir: assets/css
