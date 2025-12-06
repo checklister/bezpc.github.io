@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Hack The Box - Busqueda"
-date: 2025-12-05
+date: 2025-12-06
 ---
 
 Hack the Box - Busqueda
