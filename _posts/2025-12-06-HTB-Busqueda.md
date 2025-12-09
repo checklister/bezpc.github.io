@@ -30,17 +30,17 @@ Hack the Box - Busqueda
 <img style="height:auto; max-width:100%"  alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/982ab488-e975-439c-b5f6-51e0619c9bb4" />
 
 Запускати, але не читати. Тому методом научного тику запускаємо. І скрипт дає нам список своїх можливостей 
-<img style="height:auto; max-width:100%"  alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/faf29b0a-b5dd-4544-a2fe-8c8ca1b42d87" />
+
 
 1. Docker-ps(Скоріше за все `docker ps` під капотом)
-2. Docker-insect(Скоріше за все `docker inspect` під капотом)
+2. Docker-inspect(Скоріше за все `docker inspect` під капотом)
 3. FullCheckup(Скоріше за все щось кастомне під капотом)
 
 Підемо по порядку - docker-ps показує нам список контейнерів які є - gitea і mysql(скоріше за все для неї ж).
-<img style="height:auto; max-width:100%" alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/134d31e3-5daa-40f5-ac28-7f3d50d2aa9d" />
+
 
 docker-inspect - вже цікавіше - вона описує контейнер і все що йому передавалося. А передатися можуть і паролі, і логіни, і всіляке інше. Вводимо команду, але вона вимагає від нас синтаксу(
-<img style="height:auto; max-width:100%"  alt="Pasted image 20251205205657" src="https://github.com/user-attachments/assets/cd821d1f-19fe-4049-8b75-dbc47a5d5649" />
+
 
 Погугливши, знаходимо як це все писати, тому кінцева команда виглядає так:
 `sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-inspect -f '{{json .}}' <тег контейнера>`
